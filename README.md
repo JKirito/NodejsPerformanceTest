@@ -92,6 +92,48 @@ pnpm test:perf
 ./src/tests/performance/run-single-test.sh item.js
 ```
 
+## CI/CD Pipeline
+
+This project uses GitHub Actions for continuous integration and deployment:
+
+### CI Workflow
+
+The CI workflow runs on every push to main/master and on pull requests:
+
+- Sets up Node.js with multiple versions (16.x, 18.x)
+- Spins up a MongoDB service container for testing
+- Installs dependencies with pnpm
+- Runs linting checks
+- Builds the TypeScript code
+- Runs tests
+- Uploads build artifacts for the deployment workflow
+
+### CD Workflow
+
+The CD workflow runs after a successful CI workflow on the main/master branch:
+
+- Downloads the build artifacts from the CI workflow
+- Installs production dependencies
+- Deploys to Heroku
+- Sends a notification on deployment status
+
+### Environment Variables
+
+The following environment variables are required for deployment:
+
+- `NODE_ENV`: The environment (production, development, test)
+- `MONGODB_URI`: MongoDB connection string
+- `PORT`: Port for the server to listen on (provided by Heroku)
+
+### Heroku Deployment
+
+To deploy to Heroku, you need to set the following secrets in your GitHub repository:
+
+- `HEROKU_API_KEY`: Your Heroku API key
+- `HEROKU_APP_NAME`: Your Heroku app name
+- `HEROKU_EMAIL`: Your Heroku account email
+- `MONGODB_URI`: Your MongoDB connection string
+
 ## License
 
 ISC

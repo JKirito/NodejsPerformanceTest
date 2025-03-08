@@ -1,0 +1,59 @@
+name: CD - Deploy to Production
+
+on:
+  workflow_run:
+    workflows: ["CI - Test and Build"]
+    branches: [main, master]
+    types:
+      - completed
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Download build artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: dist
+          path: dist/
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18.x'
+      
+      - name: Setup PNPM
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+          run_install: false
+      
+      - name: Install production dependencies
+        run: pnpm install --prod
+      
+      # Deploy to Heroku
+      - name: Deploy to Heroku
+        uses: akhileshns/heroku-deploy@v3.12.14
+        with:
+          heroku_api_key: ${{ secrets.HEROKU_API_KEY }}
+          heroku_app_name: ${{ secrets.HEROKU_APP_NAME }}
+          heroku_email: ${{ secrets.HEROKU_EMAIL }}
+          procfile: "web: node dist/index.js"
+        env:
+          HD_NODE_ENV: production
+          HD_MONGODB_URI: ${{ secrets.MONGODB_URI }}
+      
+      # Optional: Add notification on successful deployment
+      - name: Deployment Status Notification
+        if: always()
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_CHANNEL: deployments
+          SLACK_COLOR: ${{ job.status }}
+          SLACK_TITLE: Deployment Status
+          SLACK_MESSAGE: 'API deployment to production ${{ job.status }}'
