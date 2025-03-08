@@ -9,6 +9,7 @@ on:
 jobs:
   test-and-build:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     services:
       mongodb:
@@ -59,7 +60,12 @@ jobs:
         run: |
           # Remove the lock file and regenerate it to ensure compatibility
           rm -f pnpm-lock.yaml
+          echo "Installing production dependencies first..."
+          pnpm install --prod --no-frozen-lockfile
+          echo "Installing dev dependencies..."
           pnpm install --no-frozen-lockfile
+          echo "Dependencies installed successfully"
+          pnpm list
       
       - name: Lint
         run: pnpm lint
