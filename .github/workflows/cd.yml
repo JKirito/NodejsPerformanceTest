@@ -47,7 +47,10 @@ jobs:
             ${{ runner.os }}-pnpm-store-
       
       - name: Install production dependencies
-        run: pnpm install --prod
+        run: |
+          # Remove the lock file and regenerate it to ensure compatibility
+          rm -f pnpm-lock.yaml
+          pnpm install --prod --no-frozen-lockfile
       
       # Deploy to Heroku
       - name: Deploy to Heroku
